@@ -4,6 +4,7 @@ import FoodCard from "@/components/FoodCard";
 import CategoryFilter from "@/components/CategoryFilter";
 import SearchBar from "@/components/SearchBar";
 import Header from "@/components/Header";
+import FeaturedSection from "@/components/FeaturedSection";
 
 const Menu = () => {
   const [category, setCategory] = useState("All");
@@ -38,6 +39,7 @@ const Menu = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <div className="container py-6">
+        <FeaturedSection />
         <h1 className="mb-1 font-display text-3xl font-bold">Our Menu</h1>
         <p className="mb-5 text-sm text-muted-foreground">
           {filtered.length} dish{filtered.length !== 1 ? "es" : ""} available
