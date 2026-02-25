@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingCart, UtensilsCrossed, Home, BookOpen } from "lucide-react";
+import { ShoppingCart, UtensilsCrossed, Home, BookOpen, Receipt } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 
 const Header = () => {
@@ -9,6 +9,7 @@ const Header = () => {
   const navItems = [
     { path: "/", label: "Home", icon: Home },
     { path: "/menu", label: "Menu", icon: BookOpen },
+    { path: "/orders", label: "Orders", icon: Receipt },
     { path: "/cart", label: "Cart", icon: ShoppingCart, badge: totalItems },
   ];
 

@@ -2,20 +2,25 @@ import Header from "@/components/Header";
 import { useCart } from "@/context/CartContext";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, MessageSquare } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
+import { useOrderHistory } from "@/context/OrderHistoryContext";
 
 const Cart = () => {
   const { items, updateQuantity, removeItem, updateInstructions, clearCart, totalPrice } = useCart();
+  const { addOrder } = useOrderHistory();
+  const navigate = useNavigate();
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const handleCheckout = () => {
+    addOrder(items, totalPrice * 1.08);
     toast({
       title: "Order Placed Successfully!",
-      description: `Your order of $${totalPrice.toFixed(2)} is being prepared. Estimated delivery: 30 minutes.`,
+      description: `Your order of $${(totalPrice * 1.08).toFixed(2)} is being prepared. Estimated delivery: 30 minutes.`,
     });
     clearCart();
+    navigate("/orders");
   };
 
   if (items.length === 0) {
