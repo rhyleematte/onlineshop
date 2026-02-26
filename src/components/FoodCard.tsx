@@ -1,6 +1,7 @@
 import { FoodItem } from "@/types/food";
 import { useCart } from "@/context/CartContext";
-import { Star, Clock, Flame, Plus, MapPin } from "lucide-react";
+import { useFavorites } from "@/context/FavoritesContext";
+import { Star, Clock, Flame, Plus, MapPin, Heart } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import FoodDetailModal from "./FoodDetailModal";
@@ -12,7 +13,9 @@ interface FoodCardProps {
 
 const FoodCard = ({ food, index = 0 }: FoodCardProps) => {
   const { addItem } = useCart();
+  const { toggleFavorite, isFavorite } = useFavorites();
   const [showDetail, setShowDetail] = useState(false);
+  const fav = isFavorite(food.id);
 
   return (
     <>
@@ -35,6 +38,15 @@ const FoodCard = ({ food, index = 0 }: FoodCardProps) => {
             <MapPin className="h-3 w-3 text-secondary" />
             {food.country}
           </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleFavorite(food.id);
+            }}
+            className="absolute top-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-card/80 backdrop-blur-sm transition-transform hover:scale-110 active:scale-95"
+          >
+            <Heart className={`h-4 w-4 ${fav ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
+          </button>
           <button
             onClick={(e) => {
               e.stopPropagation();

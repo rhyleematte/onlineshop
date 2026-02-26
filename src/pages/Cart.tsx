@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, MessageSquare } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
@@ -10,14 +11,20 @@ import { useOrderHistory } from "@/context/OrderHistoryContext";
 const Cart = () => {
   const { items, updateQuantity, removeItem, updateInstructions, clearCart, totalPrice } = useCart();
   const { addOrder } = useOrderHistory();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const handleCheckout = () => {
-    addOrder(items, totalPrice * 1.08);
+  const handleCheckout = async () => {
+    if (!user) {
+      toast({ title: "Sign in required", description: "Please sign in to place an order.", variant: "destructive" });
+      navigate("/auth");
+      return;
+    }
+    await addOrder(items, totalPrice * 1.08);
     toast({
       title: "Order Placed Successfully!",
-      description: `Your order of $${(totalPrice * 1.08).toFixed(2)} is being prepared. Estimated delivery: 30 minutes.`,
+      description: `Your order of $${(totalPrice * 1.08).toFixed(2)} is being prepared.`,
     });
     clearCart();
     navigate("/orders");
@@ -54,12 +61,7 @@ const Cart = () => {
             <h1 className="font-display text-3xl font-bold">Your Order</h1>
             <p className="text-sm text-muted-foreground">{items.length} item{items.length !== 1 ? "s" : ""}</p>
           </div>
-          <button
-            onClick={clearCart}
-            className="text-sm text-destructive hover:underline"
-          >
-            Clear All
-          </button>
+          <button onClick={clearCart} className="text-sm text-destructive hover:underline">Clear All</button>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
@@ -74,26 +76,17 @@ const Cart = () => {
                   exit={{ opacity: 0, x: -50 }}
                   className="flex gap-4 rounded-xl border border-border bg-card p-4 shadow-card"
                 >
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="h-24 w-24 rounded-lg object-cover flex-shrink-0"
-                  />
+                  <img src={item.image} alt={item.name} className="h-24 w-24 rounded-lg object-cover flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <h3 className="font-display text-base font-semibold">{item.name}</h3>
                         <p className="text-xs text-muted-foreground">{item.country} • {item.category}</p>
                       </div>
-                      <button
-                        onClick={() => removeItem(item.id)}
-                        className="flex-shrink-0 p-1 text-muted-foreground hover:text-destructive transition-colors"
-                      >
+                      <button onClick={() => removeItem(item.id)} className="flex-shrink-0 p-1 text-muted-foreground hover:text-destructive transition-colors">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
-
-                    {/* Special Instructions */}
                     {editingId === item.id ? (
                       <div className="mt-2">
                         <textarea
@@ -107,34 +100,22 @@ const Cart = () => {
                         />
                       </div>
                     ) : (
-                      <button
-                        onClick={() => setEditingId(item.id)}
-                        className="mt-1 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                      >
+                      <button onClick={() => setEditingId(item.id)} className="mt-1 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
                         <MessageSquare className="h-3 w-3" />
                         {item.specialInstructions || "Add instructions"}
                       </button>
                     )}
-
                     <div className="mt-3 flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          className="flex h-7 w-7 items-center justify-center rounded-md border border-border text-xs hover:bg-muted"
-                        >
+                        <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="flex h-7 w-7 items-center justify-center rounded-md border border-border text-xs hover:bg-muted">
                           <Minus className="h-3 w-3" />
                         </button>
                         <span className="w-5 text-center text-sm font-semibold">{item.quantity}</span>
-                        <button
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="flex h-7 w-7 items-center justify-center rounded-md border border-border text-xs hover:bg-muted"
-                        >
+                        <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="flex h-7 w-7 items-center justify-center rounded-md border border-border text-xs hover:bg-muted">
                           <Plus className="h-3 w-3" />
                         </button>
                       </div>
-                      <span className="font-semibold text-secondary">
-                        ${(item.price * item.quantity).toFixed(2)}
-                      </span>
+                      <span className="font-semibold text-secondary">${(item.price * item.quantity).toFixed(2)}</span>
                     </div>
                   </div>
                 </motion.div>
@@ -142,7 +123,6 @@ const Cart = () => {
             </AnimatePresence>
           </div>
 
-          {/* Order Summary */}
           <div className="lg:col-span-1">
             <div className="sticky top-20 rounded-xl border border-border bg-card p-5 shadow-card">
               <h3 className="mb-4 font-display text-lg font-bold">Order Summary</h3>
@@ -165,18 +145,13 @@ const Cart = () => {
                   <span>${(totalPrice * 1.08).toFixed(2)}</span>
                 </div>
               </div>
-
               <button
                 onClick={handleCheckout}
                 className="mt-5 w-full rounded-xl bg-secondary py-3 text-sm font-semibold text-secondary-foreground transition-transform hover:scale-[1.02] active:scale-[0.98]"
               >
-                Place Order — ${(totalPrice * 1.08).toFixed(2)}
+                {user ? `Place Order — $${(totalPrice * 1.08).toFixed(2)}` : "Sign In to Order"}
               </button>
-
-              <Link
-                to="/menu"
-                className="mt-3 flex items-center justify-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-              >
+              <Link to="/menu" className="mt-3 flex items-center justify-center gap-1 text-xs text-muted-foreground hover:text-foreground">
                 Continue Shopping
               </Link>
             </div>

@@ -1,14 +1,17 @@
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingCart, UtensilsCrossed, Home, BookOpen, Receipt } from "lucide-react";
+import { ShoppingCart, UtensilsCrossed, Home, BookOpen, Receipt, Heart, LogIn, LogOut, User } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 
 const Header = () => {
   const { totalItems } = useCart();
+  const { user, signOut } = useAuth();
   const location = useLocation();
 
   const navItems = [
     { path: "/", label: "Home", icon: Home },
     { path: "/menu", label: "Menu", icon: BookOpen },
+    { path: "/favorites", label: "Favorites", icon: Heart },
     { path: "/orders", label: "Orders", icon: Receipt },
     { path: "/cart", label: "Cart", icon: ShoppingCart, badge: totalItems },
   ];
@@ -46,6 +49,28 @@ const Header = () => {
               </Link>
             );
           })}
+
+          {user ? (
+            <button
+              onClick={() => signOut()}
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Sign Out</span>
+            </button>
+          ) : (
+            <Link
+              to="/auth"
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                location.pathname === "/auth"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              }`}
+            >
+              <LogIn className="h-4 w-4" />
+              <span className="hidden sm:inline">Sign In</span>
+            </Link>
+          )}
         </nav>
       </div>
     </header>
