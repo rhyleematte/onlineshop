@@ -51,13 +51,26 @@ const Header = () => {
           })}
 
           {user ? (
-            <button
-              onClick={() => signOut()}
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-            >
-              <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">Sign Out</span>
-            </button>
+            <>
+              <Link
+                to="/profile"
+                className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                  location.pathname === "/profile"
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                <User className="h-4 w-4" />
+                <span className="hidden sm:inline">Profile</span>
+              </Link>
+              <button
+                onClick={() => signOut()}
+                className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">Sign Out</span>
+              </button>
+            </>
           ) : (
             <Link
               to="/auth"
