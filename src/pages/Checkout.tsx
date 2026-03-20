@@ -166,6 +166,42 @@ const Checkout = () => {
           </div>
         </div>
 
+        {/* Delivery address */}
+        <div className="mb-6 rounded-xl border border-border bg-card p-4 shadow-card">
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            <MapPin className="h-4 w-4" />
+            Delivery Address
+          </h3>
+          <div className="space-y-3">
+            <input
+              type="text"
+              placeholder="Street address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              required
+              className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="text"
+                placeholder="City"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                required
+                className="rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+              <input
+                type="tel"
+                placeholder="Phone number"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+                className="rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Payment method */}
         <div className="mb-6">
           <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Payment Method</h3>
