@@ -85,6 +85,7 @@ const Header = () => {
               <span className="hidden sm:inline">Sign In</span>
             </Link>
           )}
+          <DarkModeToggle />
         </nav>
       </div>
     </header>
