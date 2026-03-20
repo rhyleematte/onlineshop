@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { ShoppingCart, UtensilsCrossed, Home, BookOpen, Receipt, Heart, LogIn, LogOut, User } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import DarkModeToggle from "./DarkModeToggle";
 import { useAuth } from "@/context/AuthContext";
 
 const Header = () => {
