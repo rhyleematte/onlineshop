@@ -5,7 +5,7 @@ import { useOrderHistory } from "@/context/OrderHistoryContext";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import { toast } from "@/hooks/use-toast";
-import { CreditCard, Banknote, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { CreditCard, Banknote, ArrowLeft, CheckCircle2, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type PaymentMethod = "online" | "cod";
@@ -18,6 +18,9 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("online");
   const [processing, setProcessing] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [phone, setPhone] = useState("");
 
   const tax = totalPrice * 0.08;
   const grandTotal = totalPrice + tax;
@@ -33,6 +36,10 @@ const Checkout = () => {
   }
 
   const handlePlaceOrder = async () => {
+    if (!address.trim() || !city.trim() || !phone.trim()) {
+      toast({ title: "Missing info", description: "Please fill in your delivery address and phone number.", variant: "destructive" });
+      return;
+    }
     setProcessing(true);
     try {
       await addOrder(items, grandTotal);
@@ -82,6 +89,14 @@ const Checkout = () => {
             </div>
 
             <div className="mb-4 space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Deliver to</span>
+                <span className="text-right font-medium">{address}, {city}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Phone</span>
+                <span className="font-medium">{phone}</span>
+              </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Payment Method</span>
                 <span className="font-medium">{paymentMethod === "cod" ? "Cash on Delivery" : "Online Payment"}</span>
@@ -159,6 +174,42 @@ const Checkout = () => {
             <div className="flex justify-between text-base font-bold pt-1">
               <span>Total</span>
               <span>${grandTotal.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Delivery address */}
+        <div className="mb-6 rounded-xl border border-border bg-card p-4 shadow-card">
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            <MapPin className="h-4 w-4" />
+            Delivery Address
+          </h3>
+          <div className="space-y-3">
+            <input
+              type="text"
+              placeholder="Street address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              required
+              className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="text"
+                placeholder="City"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                required
+                className="rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+              <input
+                type="tel"
+                placeholder="Phone number"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required
+                className="rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              />
             </div>
           </div>
         </div>
