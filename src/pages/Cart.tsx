@@ -6,28 +6,21 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
-import { useOrderHistory } from "@/context/OrderHistoryContext";
+
 
 const Cart = () => {
   const { items, updateQuantity, removeItem, updateInstructions, clearCart, totalPrice } = useCart();
-  const { addOrder } = useOrderHistory();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const handleCheckout = async () => {
+  const handleCheckout = () => {
     if (!user) {
       toast({ title: "Sign in required", description: "Please sign in to place an order.", variant: "destructive" });
       navigate("/auth");
       return;
     }
-    await addOrder(items, totalPrice * 1.08);
-    toast({
-      title: "Order Placed Successfully!",
-      description: `Your order of $${(totalPrice * 1.08).toFixed(2)} is being prepared.`,
-    });
-    clearCart();
-    navigate("/orders");
+    navigate("/checkout");
   };
 
   if (items.length === 0) {
