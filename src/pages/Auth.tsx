@@ -18,16 +18,28 @@ const Auth = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = isLogin
-      ? await signIn(email, password)
-      : await signUp(email, password, displayName);
-    setLoading(false);
 
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+    if (isLogin) {
+      const { error } = await signIn(email, password);
+      setLoading(false);
+      if (error) {
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Welcome back!", description: "You're now signed in." });
+        navigate("/");
+      }
     } else {
-      toast({ title: isLogin ? "Welcome back!" : "Account created!", description: "You're now signed in." });
-      navigate("/");
+      const { error, data } = await signUp(email, password, displayName);
+      setLoading(false);
+      if (error) {
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+      } else if (data?.user && !data.session) {
+        // Email confirmation required
+        toast({ title: "Check your email!", description: "We sent you a confirmation link. Please verify your email before signing in." });
+      } else {
+        toast({ title: "Account created!", description: "You're now signed in." });
+        navigate("/");
+      }
     }
   };
 
