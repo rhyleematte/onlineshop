@@ -90,6 +90,14 @@ const Checkout = () => {
 
             <div className="mb-4 space-y-2 text-sm">
               <div className="flex justify-between">
+                <span className="text-muted-foreground">Deliver to</span>
+                <span className="text-right font-medium">{address}, {city}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Phone</span>
+                <span className="font-medium">{phone}</span>
+              </div>
+              <div className="flex justify-between">
                 <span className="text-muted-foreground">Payment Method</span>
                 <span className="font-medium">{paymentMethod === "cod" ? "Cash on Delivery" : "Online Payment"}</span>
               </div>
