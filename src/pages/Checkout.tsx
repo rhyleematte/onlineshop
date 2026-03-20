@@ -5,7 +5,7 @@ import { useOrderHistory } from "@/context/OrderHistoryContext";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import { toast } from "@/hooks/use-toast";
-import { CreditCard, Banknote, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { CreditCard, Banknote, ArrowLeft, CheckCircle2, MapPin } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type PaymentMethod = "online" | "cod";
