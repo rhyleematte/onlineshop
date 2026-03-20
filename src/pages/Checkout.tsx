@@ -36,6 +36,10 @@ const Checkout = () => {
   }
 
   const handlePlaceOrder = async () => {
+    if (!address.trim() || !city.trim() || !phone.trim()) {
+      toast({ title: "Missing info", description: "Please fill in your delivery address and phone number.", variant: "destructive" });
+      return;
+    }
     setProcessing(true);
     try {
       await addOrder(items, grandTotal);
