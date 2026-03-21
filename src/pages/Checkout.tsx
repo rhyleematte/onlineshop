@@ -5,22 +5,30 @@ import { useOrderHistory } from "@/context/OrderHistoryContext";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import { toast } from "@/hooks/use-toast";
-import { CreditCard, Banknote, ArrowLeft, CheckCircle2, MapPin } from "lucide-react";
+import { CreditCard, Banknote, ArrowLeft, CheckCircle2, MapPin, Smartphone, Wallet } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-type PaymentMethod = "online" | "cod";
+type PaymentMethod = "stripe" | "paypal" | "gcash" | "cod";
+
+const paymentOptions: { id: PaymentMethod; label: string; sub: string; icon: typeof CreditCard }[] = [
+  { id: "stripe", label: "Credit / Debit Card", sub: "Visa, Mastercard, etc.", icon: CreditCard },
+  { id: "paypal", label: "PayPal", sub: "Pay with PayPal", icon: Wallet },
+  { id: "gcash", label: "GCash / PayMaya", sub: "Philippine e-wallets", icon: Smartphone },
+  { id: "cod", label: "Cash on Delivery", sub: "Pay when delivered", icon: Banknote },
+];
 
 const Checkout = () => {
   const { items, totalPrice, clearCart } = useCart();
   const { user } = useAuth();
   const { addOrder } = useOrderHistory();
   const navigate = useNavigate();
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("online");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("stripe");
   const [processing, setProcessing] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [address, setAddress] = useState("");
   const [city, setCity] = useState("");
   const [phone, setPhone] = useState("");
+  const [receiptItems, setReceiptItems] = useState(items);
 
   const tax = totalPrice * 0.08;
   const grandTotal = totalPrice + tax;
@@ -41,19 +49,23 @@ const Checkout = () => {
       return;
     }
     setProcessing(true);
+    setReceiptItems([...items]);
     try {
-      await addOrder(items, grandTotal);
-      // Get latest order id from context is tricky, use a simple id
-      const id = `ORD-${Date.now().toString(36).toUpperCase()}`;
-      setOrderId(id);
-      toast({ title: "Order placed!", description: `Payment: ${paymentMethod === "cod" ? "Cash on Delivery" : "Online Payment"}` });
-      clearCart();
+      const fullAddress = `${address}, ${city}`;
+      const id = await addOrder(items, grandTotal, paymentMethod, fullAddress, phone);
+      if (id) {
+        setOrderId(id);
+        toast({ title: "Order placed!", description: `Payment: ${paymentOptions.find(p => p.id === paymentMethod)?.label}` });
+        clearCart();
+      }
     } catch {
       toast({ title: "Error", description: "Failed to place order.", variant: "destructive" });
     } finally {
       setProcessing(false);
     }
   };
+
+  const paymentLabel = paymentOptions.find(p => p.id === paymentMethod)?.label || paymentMethod;
 
   // Receipt view
   if (orderId) {
@@ -78,14 +90,19 @@ const Checkout = () => {
 
             <div className="mb-4 rounded-lg bg-muted/50 p-3 text-center text-xs">
               <span className="text-muted-foreground">Order ID: </span>
-              <span className="font-mono font-semibold">{orderId}</span>
+              <span className="font-mono font-semibold">{orderId.slice(-8).toUpperCase()}</span>
             </div>
 
             <div className="mb-4 border-b border-dashed border-border pb-4">
               <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Items</h3>
-              {items.length === 0 ? (
-                <p className="text-xs text-muted-foreground">Items saved to your order history</p>
-              ) : null}
+              <div className="space-y-2">
+                {receiptItems.map((item) => (
+                  <div key={item.id} className="flex justify-between text-sm">
+                    <span>{item.name} x{item.quantity}</span>
+                    <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="mb-4 space-y-2 text-sm">
@@ -99,10 +116,18 @@ const Checkout = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Payment Method</span>
-                <span className="font-medium">{paymentMethod === "cod" ? "Cash on Delivery" : "Online Payment"}</span>
+                <span className="font-medium">{paymentLabel}</span>
+              </div>
+              <div className="flex justify-between border-t border-border pt-2">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span>${(grandTotal / 1.08).toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Total</span>
+                <span className="text-muted-foreground">Tax (8%)</span>
+                <span>${(grandTotal - grandTotal / 1.08).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-semibold">Total</span>
                 <span className="text-lg font-bold">${grandTotal.toFixed(2)}</span>
               </div>
             </div>
@@ -110,7 +135,7 @@ const Checkout = () => {
             <div className="mb-4 rounded-lg border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
               {paymentMethod === "cod"
                 ? "Please prepare the exact amount for the delivery rider."
-                : "Payment has been processed successfully."}
+                : `Payment via ${paymentLabel} has been processed successfully.`}
             </div>
 
             <div className="flex gap-3">
@@ -124,7 +149,7 @@ const Checkout = () => {
                 onClick={() => navigate("/orders")}
                 className="flex-1 rounded-xl bg-secondary py-3 text-sm font-semibold text-secondary-foreground transition-transform hover:scale-[1.02] active:scale-[0.98]"
               >
-                View Orders
+                Track Order
               </button>
             </div>
           </motion.div>
@@ -218,35 +243,26 @@ const Checkout = () => {
         <div className="mb-6">
           <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Payment Method</h3>
           <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => setPaymentMethod("online")}
-              className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all active:scale-[0.97] ${
-                paymentMethod === "online"
-                  ? "border-secondary bg-secondary/5 shadow-md"
-                  : "border-border hover:border-muted-foreground/30"
-              }`}
-            >
-              <CreditCard className={`h-6 w-6 ${paymentMethod === "online" ? "text-secondary" : "text-muted-foreground"}`} />
-              <span className="text-sm font-semibold">Online Payment</span>
-              <span className="text-[10px] text-muted-foreground">Card / Digital Wallet</span>
-            </button>
-            <button
-              onClick={() => setPaymentMethod("cod")}
-              className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all active:scale-[0.97] ${
-                paymentMethod === "cod"
-                  ? "border-secondary bg-secondary/5 shadow-md"
-                  : "border-border hover:border-muted-foreground/30"
-              }`}
-            >
-              <Banknote className={`h-6 w-6 ${paymentMethod === "cod" ? "text-secondary" : "text-muted-foreground"}`} />
-              <span className="text-sm font-semibold">Cash on Delivery</span>
-              <span className="text-[10px] text-muted-foreground">Pay when delivered</span>
-            </button>
+            {paymentOptions.map(({ id, label, sub, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setPaymentMethod(id)}
+                className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 transition-all active:scale-[0.97] ${
+                  paymentMethod === id
+                    ? "border-secondary bg-secondary/5 shadow-md"
+                    : "border-border hover:border-muted-foreground/30"
+                }`}
+              >
+                <Icon className={`h-6 w-6 ${paymentMethod === id ? "text-secondary" : "text-muted-foreground"}`} />
+                <span className="text-sm font-semibold">{label}</span>
+                <span className="text-[10px] text-muted-foreground">{sub}</span>
+              </button>
+            ))}
           </div>
         </div>
 
         <AnimatePresence>
-          {paymentMethod === "online" && (
+          {paymentMethod === "stripe" && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
@@ -256,29 +272,46 @@ const Checkout = () => {
               <div className="rounded-xl border border-border bg-card p-4 shadow-card">
                 <h3 className="mb-3 text-sm font-semibold">Card Details</h3>
                 <div className="space-y-3">
-                  <input
-                    type="text"
-                    placeholder="Card Number"
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
+                  <input type="text" placeholder="Card Number" className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
                   <div className="grid grid-cols-2 gap-3">
-                    <input
-                      type="text"
-                      placeholder="MM/YY"
-                      className="rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    />
-                    <input
-                      type="text"
-                      placeholder="CVV"
-                      className="rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    />
+                    <input type="text" placeholder="MM/YY" className="rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                    <input type="text" placeholder="CVV" className="rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
                   </div>
-                  <input
-                    type="text"
-                    placeholder="Cardholder Name"
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
+                  <input type="text" placeholder="Cardholder Name" className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
                 </div>
+              </div>
+            </motion.div>
+          )}
+          {paymentMethod === "paypal" && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-6 overflow-hidden"
+            >
+              <div className="rounded-xl border border-border bg-card p-4 shadow-card text-center">
+                <Wallet className="mx-auto mb-2 h-8 w-8 text-blue-500" />
+                <p className="text-sm font-medium">You'll be redirected to PayPal after placing your order.</p>
+                <p className="mt-1 text-xs text-muted-foreground">Log in to your PayPal account to complete payment.</p>
+              </div>
+            </motion.div>
+          )}
+          {paymentMethod === "gcash" && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-6 overflow-hidden"
+            >
+              <div className="rounded-xl border border-border bg-card p-4 shadow-card text-center">
+                <Smartphone className="mx-auto mb-2 h-8 w-8 text-blue-500" />
+                <p className="text-sm font-medium">Pay with GCash or PayMaya</p>
+                <p className="mt-1 text-xs text-muted-foreground">You'll receive a payment link on your phone after placing the order.</p>
+                <input
+                  type="tel"
+                  placeholder="GCash / PayMaya number"
+                  className="mt-3 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-center focus:outline-none focus:ring-2 focus:ring-ring"
+                />
               </div>
             </motion.div>
           )}
@@ -289,7 +322,7 @@ const Checkout = () => {
           disabled={processing}
           className="w-full rounded-xl bg-secondary py-3.5 text-sm font-semibold text-secondary-foreground transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {processing ? "Processing..." : `Pay $${grandTotal.toFixed(2)} — ${paymentMethod === "cod" ? "Cash on Delivery" : "Online"}`}
+          {processing ? "Processing..." : `Pay $${grandTotal.toFixed(2)} — ${paymentLabel}`}
         </button>
       </div>
     </div>
