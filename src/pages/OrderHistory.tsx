@@ -1,14 +1,60 @@
 import Header from "@/components/Header";
 import { useOrderHistory } from "@/context/OrderHistoryContext";
-import { Clock, Package, CheckCircle, Receipt } from "lucide-react";
+import { Clock, Package, CheckCircle, Receipt, Truck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 
-const statusConfig = {
-  preparing: { icon: Clock, label: "Preparing", className: "text-secondary bg-secondary/10" },
-  "on-the-way": { icon: Package, label: "On the Way", className: "text-blue-500 bg-blue-500/10" },
-  delivered: { icon: CheckCircle, label: "Delivered", className: "text-success bg-success/10" },
+const statusSteps = [
+  { key: "preparing", icon: Clock, label: "Preparing" },
+  { key: "on-the-way", icon: Truck, label: "On the Way" },
+  { key: "delivered", icon: CheckCircle, label: "Delivered" },
+];
+
+const statusConfig: Record<string, { className: string }> = {
+  preparing: { className: "text-secondary" },
+  "on-the-way": { className: "text-blue-500" },
+  delivered: { className: "text-success" },
+};
+
+function getStepIndex(status: string) {
+  return statusSteps.findIndex(s => s.key === status);
+}
+
+const OrderTracker = ({ status }: { status: string }) => {
+  const currentIdx = getStepIndex(status);
+  return (
+    <div className="flex items-center justify-between gap-1 py-3">
+      {statusSteps.map((step, i) => {
+        const StepIcon = step.icon;
+        const isCompleted = i <= currentIdx;
+        const isCurrent = i === currentIdx;
+        return (
+          <div key={step.key} className="flex flex-1 items-center">
+            <div className="flex flex-col items-center gap-1">
+              <div
+                className={`flex h-9 w-9 items-center justify-center rounded-full border-2 transition-colors ${
+                  isCompleted
+                    ? isCurrent
+                      ? "border-secondary bg-secondary/10 text-secondary animate-pulse"
+                      : "border-success bg-success/10 text-success"
+                    : "border-border bg-muted text-muted-foreground"
+                }`}
+              >
+                <StepIcon className="h-4 w-4" />
+              </div>
+              <span className={`text-[10px] font-medium ${isCompleted ? (isCurrent ? "text-secondary" : "text-success") : "text-muted-foreground"}`}>
+                {step.label}
+              </span>
+            </div>
+            {i < statusSteps.length - 1 && (
+              <div className={`mx-1 h-0.5 flex-1 rounded ${i < currentIdx ? "bg-success" : "bg-border"}`} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
 };
 
 const OrderHistory = () => {
@@ -69,7 +115,7 @@ const OrderHistory = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20 sm:pb-6">
       <Header />
       <div className="container py-6">
         <h1 className="mb-1 font-display text-3xl font-bold">Order History</h1>
@@ -78,8 +124,7 @@ const OrderHistory = () => {
         <div className="space-y-4">
           <AnimatePresence>
             {orders.map((order, i) => {
-              const status = statusConfig[order.status] || statusConfig.preparing;
-              const StatusIcon = status.icon;
+              const cfg = statusConfig[order.status] || statusConfig.preparing;
               return (
                 <motion.div
                   key={order.id}
@@ -88,18 +133,18 @@ const OrderHistory = () => {
                   transition={{ delay: i * 0.05 }}
                   className="rounded-xl border border-border bg-card p-5 shadow-card"
                 >
-                  <div className="flex items-start justify-between gap-4 mb-4">
+                  <div className="flex items-start justify-between gap-4 mb-2">
                     <div>
                       <p className="font-display text-sm font-semibold">Order #{order.id.slice(-6).toUpperCase()}</p>
                       <p className="text-xs text-muted-foreground">{new Date(order.date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
                     </div>
-                    <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${status.className}`}>
-                      <StatusIcon className="h-3 w-3" />
-                      {status.label}
-                    </span>
+                    <span className="text-xs font-medium text-muted-foreground capitalize">{order.payment_method === "cod" ? "Cash on Delivery" : order.payment_method}</span>
                   </div>
 
-                  <div className="space-y-2">
+                  {/* Real-time order tracker */}
+                  <OrderTracker status={order.status} />
+
+                  <div className="space-y-2 mt-2">
                     {order.items.map((item, idx) => (
                       <div key={idx} className="flex items-center gap-3">
                         <img src={item.food_image} alt={item.food_name} className="h-12 w-12 rounded-lg object-cover flex-shrink-0" />
