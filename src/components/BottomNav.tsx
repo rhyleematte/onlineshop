@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Home, BookOpen, Heart, Receipt, ShoppingCart } from "lucide-react";
 import { useCart } from "@/context/CartContext";
@@ -10,7 +11,7 @@ const navItems = [
   { path: "/cart", label: "Cart", icon: ShoppingCart },
 ];
 
-const BottomNav = () => {
+const BottomNav = forwardRef<HTMLElement>((_, ref) => {
   const location = useLocation();
   const { totalItems } = useCart();
 
