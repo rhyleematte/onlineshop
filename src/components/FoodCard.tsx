@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import { FoodItem } from "@/types/food";
 import { useCart } from "@/context/CartContext";
 import { useFavorites } from "@/context/FavoritesContext";
@@ -11,7 +12,7 @@ interface FoodCardProps {
   index?: number;
 }
 
-const FoodCard = ({ food, index = 0 }: FoodCardProps) => {
+const FoodCard = forwardRef<HTMLDivElement, FoodCardProps>(({ food, index = 0 }, ref) => {
   const { addItem } = useCart();
   const { toggleFavorite, isFavorite } = useFavorites();
   const [showDetail, setShowDetail] = useState(false);
@@ -86,6 +87,8 @@ const FoodCard = ({ food, index = 0 }: FoodCardProps) => {
       )}
     </>
   );
-};
+});
+
+FoodCard.displayName = "FoodCard";
 
 export default FoodCard;
