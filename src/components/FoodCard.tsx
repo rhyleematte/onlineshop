@@ -87,6 +87,8 @@ const FoodCard = forwardRef<HTMLDivElement, FoodCardProps>(({ food, index = 0 },
       )}
     </>
   );
-};
+});
+
+FoodCard.displayName = "FoodCard";
 
 export default FoodCard;
