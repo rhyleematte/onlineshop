@@ -42,7 +42,13 @@ const Profile = () => {
     setSaving(true);
     const { error } = await supabase
       .from("profiles")
-      .update({ display_name: displayName, avatar_url: avatarUrl || null })
+      .update({
+        display_name: displayName,
+        avatar_url: avatarUrl || null,
+        delivery_address: deliveryAddress || null,
+        delivery_city: deliveryCity || null,
+        delivery_phone: deliveryPhone || null,
+      } as any)
       .eq("user_id", user.id);
     setSaving(false);
     if (error) {
