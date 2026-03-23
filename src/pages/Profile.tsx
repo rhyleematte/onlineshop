@@ -137,6 +137,47 @@ const Profile = () => {
                   />
                 </div>
 
+                <div className="pt-4 border-t border-border">
+                  <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+                    <MapPin className="h-4 w-4" />
+                    Default Delivery Address
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium">Street Address</label>
+                      <input
+                        type="text"
+                        value={deliveryAddress}
+                        onChange={(e) => setDeliveryAddress(e.target.value)}
+                        placeholder="123 Main Street"
+                        className="w-full rounded-xl border border-input bg-background py-3 px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="mb-1.5 block text-sm font-medium">City</label>
+                        <input
+                          type="text"
+                          value={deliveryCity}
+                          onChange={(e) => setDeliveryCity(e.target.value)}
+                          placeholder="Manila"
+                          className="w-full rounded-xl border border-input bg-background py-3 px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1.5 block text-sm font-medium">Phone</label>
+                        <input
+                          type="tel"
+                          value={deliveryPhone}
+                          onChange={(e) => setDeliveryPhone(e.target.value)}
+                          placeholder="+63 912 345 6789"
+                          className="w-full rounded-xl border border-input bg-background py-3 px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <button
                   onClick={handleSave}
                   disabled={saving}
