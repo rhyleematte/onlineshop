@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useOrderHistory } from "@/context/OrderHistoryContext";
+import { useProfileAddress } from "@/hooks/useProfileAddress";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import { toast } from "@/hooks/use-toast";
 import { CreditCard, Banknote, ArrowLeft, CheckCircle2, MapPin, Smartphone, Wallet } from "lucide-react";
@@ -21,6 +23,7 @@ const Checkout = () => {
   const { items, totalPrice, clearCart } = useCart();
   const { user } = useAuth();
   const { addOrder } = useOrderHistory();
+  const { profileAddress, saveAddress } = useProfileAddress();
   const navigate = useNavigate();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("stripe");
   const [processing, setProcessing] = useState(false);
@@ -29,9 +32,19 @@ const Checkout = () => {
   const [city, setCity] = useState("");
   const [phone, setPhone] = useState("");
   const [receiptItems, setReceiptItems] = useState(items);
+  const [saveAddr, setSaveAddr] = useState(true);
 
   const tax = totalPrice * 0.08;
   const grandTotal = totalPrice + tax;
+
+  // Auto-fill from profile
+  useEffect(() => {
+    if (profileAddress) {
+      if (!address) setAddress(profileAddress.delivery_address);
+      if (!city) setCity(profileAddress.delivery_city);
+      if (!phone) setPhone(profileAddress.delivery_phone);
+    }
+  }, [profileAddress]);
 
   if (!user) {
     navigate("/auth");
@@ -50,10 +63,38 @@ const Checkout = () => {
     }
     setProcessing(true);
     setReceiptItems([...items]);
+
     try {
       const fullAddress = `${address}, ${city}`;
       const id = await addOrder(items, grandTotal, paymentMethod, fullAddress, phone);
-      if (id) {
+      if (!id) throw new Error("Failed to create order");
+
+      // Save address to profile
+      if (saveAddr) {
+        saveAddress({ delivery_address: address, delivery_city: city, delivery_phone: phone });
+      }
+
+      // For Stripe, redirect to Stripe Checkout
+      if (paymentMethod === "stripe") {
+        const { data, error } = await supabase.functions.invoke("create-checkout", {
+          body: {
+            items: items.map(i => ({ name: i.name, price: i.price, quantity: i.quantity })),
+            orderId: id,
+            grandTotal,
+          },
+        });
+
+        if (error || !data?.url) {
+          toast({ title: "Payment error", description: "Could not start Stripe checkout. Order saved as pending.", variant: "destructive" });
+          setOrderId(id);
+          clearCart();
+        } else {
+          clearCart();
+          window.location.href = data.url;
+          return;
+        }
+      } else {
+        // Non-Stripe: show receipt directly
         setOrderId(id);
         toast({ title: "Order placed!", description: `Payment: ${paymentOptions.find(p => p.id === paymentMethod)?.label}` });
         clearCart();
@@ -78,7 +119,6 @@ const Checkout = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
             className="rounded-2xl border border-border bg-card p-6 shadow-elegant"
-            id="receipt"
           >
             <div className="mb-6 flex flex-col items-center text-center">
               <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-success/10">
@@ -120,11 +160,11 @@ const Checkout = () => {
               </div>
               <div className="flex justify-between border-t border-border pt-2">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span>${(grandTotal / 1.08).toFixed(2)}</span>
+                <span>${totalPrice.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Tax (8%)</span>
-                <span>${(grandTotal - grandTotal / 1.08).toFixed(2)}</span>
+                <span>${tax.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="font-semibold">Total</span>
@@ -215,7 +255,6 @@ const Checkout = () => {
               placeholder="Street address"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              required
               className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <div className="grid grid-cols-2 gap-3">
@@ -224,7 +263,6 @@ const Checkout = () => {
                 placeholder="City"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                required
                 className="rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
               <input
@@ -232,10 +270,18 @@ const Checkout = () => {
                 placeholder="Phone number"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                required
                 className="rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
+            <label className="flex items-center gap-2 text-xs text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={saveAddr}
+                onChange={(e) => setSaveAddr(e.target.checked)}
+                className="rounded"
+              />
+              Save address for future orders
+            </label>
           </div>
         </div>
 
@@ -269,16 +315,10 @@ const Checkout = () => {
               exit={{ opacity: 0, height: 0 }}
               className="mb-6 overflow-hidden"
             >
-              <div className="rounded-xl border border-border bg-card p-4 shadow-card">
-                <h3 className="mb-3 text-sm font-semibold">Card Details</h3>
-                <div className="space-y-3">
-                  <input type="text" placeholder="Card Number" className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-                  <div className="grid grid-cols-2 gap-3">
-                    <input type="text" placeholder="MM/YY" className="rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-                    <input type="text" placeholder="CVV" className="rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-                  </div>
-                  <input type="text" placeholder="Cardholder Name" className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-                </div>
+              <div className="rounded-xl border border-border bg-card p-4 shadow-card text-center">
+                <CreditCard className="mx-auto mb-2 h-8 w-8 text-primary" />
+                <p className="text-sm font-medium">Secure card payment via Stripe</p>
+                <p className="mt-1 text-xs text-muted-foreground">You'll be redirected to Stripe's secure checkout to complete payment.</p>
               </div>
             </motion.div>
           )}
