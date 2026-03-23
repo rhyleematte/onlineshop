@@ -22,13 +22,16 @@ const Profile = () => {
     setLoading(true);
     supabase
       .from("profiles")
-      .select("display_name, avatar_url")
+      .select("display_name, avatar_url, delivery_address, delivery_city, delivery_phone")
       .eq("user_id", user.id)
       .single()
       .then(({ data }) => {
         if (data) {
           setDisplayName(data.display_name ?? "");
           setAvatarUrl(data.avatar_url ?? "");
+          setDeliveryAddress((data as any).delivery_address ?? "");
+          setDeliveryCity((data as any).delivery_city ?? "");
+          setDeliveryPhone((data as any).delivery_phone ?? "");
         }
         setLoading(false);
       });
