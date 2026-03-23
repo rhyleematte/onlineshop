@@ -3,7 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Camera, Save, LogIn } from "lucide-react";
+import { User, Camera, Save, LogIn, MapPin } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 
@@ -11,6 +11,9 @@ const Profile = () => {
   const { user } = useAuth();
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [deliveryCity, setDeliveryCity] = useState("");
+  const [deliveryPhone, setDeliveryPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -19,13 +22,16 @@ const Profile = () => {
     setLoading(true);
     supabase
       .from("profiles")
-      .select("display_name, avatar_url")
+      .select("display_name, avatar_url, delivery_address, delivery_city, delivery_phone")
       .eq("user_id", user.id)
       .single()
       .then(({ data }) => {
         if (data) {
           setDisplayName(data.display_name ?? "");
           setAvatarUrl(data.avatar_url ?? "");
+          setDeliveryAddress((data as any).delivery_address ?? "");
+          setDeliveryCity((data as any).delivery_city ?? "");
+          setDeliveryPhone((data as any).delivery_phone ?? "");
         }
         setLoading(false);
       });
@@ -36,7 +42,13 @@ const Profile = () => {
     setSaving(true);
     const { error } = await supabase
       .from("profiles")
-      .update({ display_name: displayName, avatar_url: avatarUrl || null })
+      .update({
+        display_name: displayName,
+        avatar_url: avatarUrl || null,
+        delivery_address: deliveryAddress || null,
+        delivery_city: deliveryCity || null,
+        delivery_phone: deliveryPhone || null,
+      } as any)
       .eq("user_id", user.id);
     setSaving(false);
     if (error) {
@@ -123,6 +135,47 @@ const Profile = () => {
                     placeholder="https://example.com/avatar.jpg"
                     className="w-full rounded-xl border border-input bg-background py-3 px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                   />
+                </div>
+
+                <div className="pt-4 border-t border-border">
+                  <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+                    <MapPin className="h-4 w-4" />
+                    Default Delivery Address
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium">Street Address</label>
+                      <input
+                        type="text"
+                        value={deliveryAddress}
+                        onChange={(e) => setDeliveryAddress(e.target.value)}
+                        placeholder="123 Main Street"
+                        className="w-full rounded-xl border border-input bg-background py-3 px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="mb-1.5 block text-sm font-medium">City</label>
+                        <input
+                          type="text"
+                          value={deliveryCity}
+                          onChange={(e) => setDeliveryCity(e.target.value)}
+                          placeholder="Manila"
+                          className="w-full rounded-xl border border-input bg-background py-3 px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1.5 block text-sm font-medium">Phone</label>
+                        <input
+                          type="tel"
+                          value={deliveryPhone}
+                          onChange={(e) => setDeliveryPhone(e.target.value)}
+                          placeholder="+63 912 345 6789"
+                          className="w-full rounded-xl border border-input bg-background py-3 px-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <button
