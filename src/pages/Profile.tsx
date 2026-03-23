@@ -3,7 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Camera, Save, LogIn } from "lucide-react";
+import { User, Camera, Save, LogIn, MapPin } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 
@@ -11,6 +11,9 @@ const Profile = () => {
   const { user } = useAuth();
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [deliveryCity, setDeliveryCity] = useState("");
+  const [deliveryPhone, setDeliveryPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
