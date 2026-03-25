@@ -35,8 +35,9 @@ const Checkout = () => {
   const [receiptItems, setReceiptItems] = useState(items);
   const [saveAddr, setSaveAddr] = useState(true);
 
+  const deliveryFee = useDeliveryFee(city, totalPrice);
   const tax = totalPrice * 0.08;
-  const grandTotal = totalPrice + tax;
+  const grandTotal = totalPrice + tax + deliveryFee.fee;
 
   // Auto-fill from profile
   useEffect(() => {
