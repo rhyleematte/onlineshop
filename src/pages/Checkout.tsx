@@ -300,6 +300,24 @@ const Checkout = () => {
               />
               Save address for future orders
             </label>
+            {city.trim() && (
+              <div className="mt-2 rounded-lg bg-muted/50 p-2.5 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 text-muted-foreground">
+                    <Truck className="h-3.5 w-3.5" />
+                    Zone: <span className="font-medium text-foreground">{deliveryFee.zoneName}</span>
+                  </span>
+                  <span className={`font-semibold ${deliveryFee.fee === 0 ? "text-success" : ""}`}>
+                    {deliveryFee.fee === 0 ? "Free Delivery" : `$${deliveryFee.fee.toFixed(2)} delivery`}
+                  </span>
+                </div>
+                {!deliveryFee.isFreeEligible && deliveryFee.fee > 0 && (
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    💡 Spend ${(FREE_DELIVERY_THRESHOLD - totalPrice).toFixed(2)} more for free delivery!
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
