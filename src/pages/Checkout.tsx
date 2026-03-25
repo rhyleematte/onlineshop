@@ -321,6 +321,61 @@ const Checkout = () => {
           </div>
         </div>
 
+        {/* Delivery Zone Breakdown */}
+        <div className="mb-6 rounded-xl border border-border bg-card p-4 shadow-card">
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            <Truck className="h-4 w-4" />
+            Delivery Zones & Fees
+          </h3>
+          <div className="overflow-hidden rounded-lg border border-border">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-muted/50">
+                  <th className="px-3 py-2 text-left font-semibold text-muted-foreground">Zone</th>
+                  <th className="px-3 py-2 text-left font-semibold text-muted-foreground">Areas</th>
+                  <th className="px-3 py-2 text-right font-semibold text-muted-foreground">Fee</th>
+                </tr>
+              </thead>
+              <tbody>
+                {DELIVERY_ZONES.map((zone) => (
+                  <tr
+                    key={zone.name}
+                    className={`border-t border-border transition-colors ${
+                      deliveryFee.zoneName === zone.name ? "bg-secondary/5" : ""
+                    }`}
+                  >
+                    <td className="px-3 py-2 font-medium">
+                      {deliveryFee.zoneName === zone.name && (
+                        <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-secondary" />
+                      )}
+                      {zone.name}
+                    </td>
+                    <td className="px-3 py-2 text-muted-foreground capitalize">
+                      {zone.cities.slice(0, 4).join(", ")}
+                      {zone.cities.length > 4 && ` +${zone.cities.length - 4} more`}
+                    </td>
+                    <td className="px-3 py-2 text-right font-semibold">
+                      {zone.fee === 0 ? (
+                        <span className="text-success">Free</span>
+                      ) : (
+                        `$${zone.fee.toFixed(2)}`
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                <tr className="border-t border-border">
+                  <td className="px-3 py-2 font-medium">Extended</td>
+                  <td className="px-3 py-2 text-muted-foreground">Other areas</td>
+                  <td className="px-3 py-2 text-right font-semibold">${DEFAULT_FEE.toFixed(2)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-2 text-[10px] text-muted-foreground text-center">
+            🎉 Orders over ${FREE_DELIVERY_THRESHOLD} get <span className="font-semibold text-success">free delivery</span> to all zones!
+          </p>
+        </div>
+
         {/* Payment method */}
         <div className="mb-6">
           <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Payment Method</h3>
