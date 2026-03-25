@@ -242,6 +242,18 @@ const Checkout = () => {
               <span className="text-muted-foreground">Tax (8%)</span>
               <span>${tax.toFixed(2)}</span>
             </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground flex items-center gap-1">
+                <Truck className="h-3.5 w-3.5" />
+                Delivery ({deliveryFee.zoneName})
+              </span>
+              <span className={deliveryFee.fee === 0 ? "text-success font-medium" : ""}>
+                {deliveryFee.fee === 0 ? "Free" : `$${deliveryFee.fee.toFixed(2)}`}
+              </span>
+            </div>
+            {deliveryFee.isFreeEligible && (
+              <p className="text-[10px] text-success">🎉 Free delivery on orders $50+!</p>
+            )}
             <div className="flex justify-between text-base font-bold pt-1">
               <span>Total</span>
               <span>${grandTotal.toFixed(2)}</span>
