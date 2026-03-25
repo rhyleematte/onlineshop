@@ -169,6 +169,10 @@ const Checkout = () => {
                 <span>${tax.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
+                <span className="text-muted-foreground">Delivery Fee</span>
+                <span>{deliveryFee.fee === 0 ? "Free" : `$${deliveryFee.fee.toFixed(2)}`}</span>
+              </div>
+              <div className="flex justify-between">
                 <span className="font-semibold">Total</span>
                 <span className="text-lg font-bold">${grandTotal.toFixed(2)}</span>
               </div>
