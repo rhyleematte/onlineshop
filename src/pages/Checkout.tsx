@@ -5,9 +5,10 @@ import { useOrderHistory } from "@/context/OrderHistoryContext";
 import { useProfileAddress } from "@/hooks/useProfileAddress";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useDeliveryFee, DELIVERY_ZONES, DEFAULT_FEE, FREE_DELIVERY_THRESHOLD } from "@/hooks/useDeliveryFee";
 import Header from "@/components/Header";
 import { toast } from "@/hooks/use-toast";
-import { CreditCard, Banknote, ArrowLeft, CheckCircle2, MapPin, Smartphone, Wallet } from "lucide-react";
+import { CreditCard, Banknote, ArrowLeft, CheckCircle2, MapPin, Smartphone, Wallet, Truck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type PaymentMethod = "stripe" | "paypal" | "gcash" | "cod";
