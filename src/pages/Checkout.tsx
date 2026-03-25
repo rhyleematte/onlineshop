@@ -5,9 +5,10 @@ import { useOrderHistory } from "@/context/OrderHistoryContext";
 import { useProfileAddress } from "@/hooks/useProfileAddress";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useDeliveryFee, DELIVERY_ZONES, DEFAULT_FEE, FREE_DELIVERY_THRESHOLD } from "@/hooks/useDeliveryFee";
 import Header from "@/components/Header";
 import { toast } from "@/hooks/use-toast";
-import { CreditCard, Banknote, ArrowLeft, CheckCircle2, MapPin, Smartphone, Wallet } from "lucide-react";
+import { CreditCard, Banknote, ArrowLeft, CheckCircle2, MapPin, Smartphone, Wallet, Truck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type PaymentMethod = "stripe" | "paypal" | "gcash" | "cod";
@@ -34,8 +35,9 @@ const Checkout = () => {
   const [receiptItems, setReceiptItems] = useState(items);
   const [saveAddr, setSaveAddr] = useState(true);
 
+  const deliveryFee = useDeliveryFee(city, totalPrice);
   const tax = totalPrice * 0.08;
-  const grandTotal = totalPrice + tax;
+  const grandTotal = totalPrice + tax + deliveryFee.fee;
 
   // Auto-fill from profile
   useEffect(() => {
@@ -167,6 +169,10 @@ const Checkout = () => {
                 <span>${tax.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
+                <span className="text-muted-foreground">Delivery Fee</span>
+                <span>{deliveryFee.fee === 0 ? "Free" : `$${deliveryFee.fee.toFixed(2)}`}</span>
+              </div>
+              <div className="flex justify-between">
                 <span className="font-semibold">Total</span>
                 <span className="text-lg font-bold">${grandTotal.toFixed(2)}</span>
               </div>
@@ -236,6 +242,18 @@ const Checkout = () => {
               <span className="text-muted-foreground">Tax (8%)</span>
               <span>${tax.toFixed(2)}</span>
             </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground flex items-center gap-1">
+                <Truck className="h-3.5 w-3.5" />
+                Delivery ({deliveryFee.zoneName})
+              </span>
+              <span className={deliveryFee.fee === 0 ? "text-success font-medium" : ""}>
+                {deliveryFee.fee === 0 ? "Free" : `$${deliveryFee.fee.toFixed(2)}`}
+              </span>
+            </div>
+            {deliveryFee.isFreeEligible && (
+              <p className="text-[10px] text-success">🎉 Free delivery on orders $50+!</p>
+            )}
             <div className="flex justify-between text-base font-bold pt-1">
               <span>Total</span>
               <span>${grandTotal.toFixed(2)}</span>
@@ -282,6 +300,24 @@ const Checkout = () => {
               />
               Save address for future orders
             </label>
+            {city.trim() && (
+              <div className="mt-2 rounded-lg bg-muted/50 p-2.5 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 text-muted-foreground">
+                    <Truck className="h-3.5 w-3.5" />
+                    Zone: <span className="font-medium text-foreground">{deliveryFee.zoneName}</span>
+                  </span>
+                  <span className={`font-semibold ${deliveryFee.fee === 0 ? "text-success" : ""}`}>
+                    {deliveryFee.fee === 0 ? "Free Delivery" : `$${deliveryFee.fee.toFixed(2)} delivery`}
+                  </span>
+                </div>
+                {!deliveryFee.isFreeEligible && deliveryFee.fee > 0 && (
+                  <p className="mt-1 text-[10px] text-muted-foreground">
+                    💡 Spend ${(FREE_DELIVERY_THRESHOLD - totalPrice).toFixed(2)} more for free delivery!
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
