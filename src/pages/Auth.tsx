@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { lovable } from "@/integrations/lovable/index";
 import { useNavigate, Link } from "react-router-dom";
 import Header from "@/components/Header";
 import { UtensilsCrossed, Mail, Lock, User } from "lucide-react";
@@ -12,7 +11,7 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, signInWithOAuth } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -115,9 +114,7 @@ const Auth = () => {
           <button
             type="button"
             onClick={async () => {
-              const { error } = await lovable.auth.signInWithOAuth("google", {
-                redirect_uri: window.location.origin,
-              });
+              const { error } = await signInWithOAuth("google");
               if (error) {
                 toast({ title: "Error", description: error.message, variant: "destructive" });
               }
